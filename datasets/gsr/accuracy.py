@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 import warnings
+import joblib
 warnings.filterwarnings('ignore')
 
 # Paths for GSR data
@@ -222,3 +223,13 @@ if __name__ == "__main__":
 
         # Predict on 5 random samples
         predict_random_samples(results, X, y, n=5)
+
+        # ---- Save the best performing model ----
+        valid_results = [(name, result) for name, result in results.items() if result is not None]
+        if valid_results:
+            best_model_name, best_result = max(valid_results, key=lambda x: x[1]['accuracy'])
+            joblib.dump(best_result['model'], "best_gsr_model.pkl")
+            if best_result['scaler']:
+                joblib.dump(best_result['scaler'], "best_gsr_scaler.pkl")
+            print(f"\n✅ Saved best model: {best_model_name}")
+            print("Files saved: best_gsr_model.pkl and best_gsr_scaler.pkl")
