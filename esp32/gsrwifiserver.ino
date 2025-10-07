@@ -32,41 +32,43 @@ void setup() {
 
 void loop() {
   static int sampleCount = 0;
-  static float sumGSR = 0;
+  static float sumVoltage = 0;
 
   // --- Read GSR every 200ms ---
   int gsrValue = analogRead(GSR_PIN);
-  sumGSR += gsrValue;
+  float voltage = (gsrValue / 4095.0) * 3.3;  // 12-bit ADC, 3.3V reference
+  sumVoltage += voltage;
   sampleCount++;
 
-  // --- Every 5 seconds, send average to server ---
+  // --- Every 5 seconds, send average voltage to server ---
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= sendInterval) {
     previousMillis = currentMillis;
 
     if (sampleCount > 0) {
-      float avgGSR = sumGSR / sampleCount;
-      sumGSR = 0;
+      float avgVoltage = sumVoltage / sampleCount;
+      sumVoltage = 0;
       sampleCount = 0;
 
-      sendToServer(avgGSR);
+      sendToServer(avgVoltage);
     }
   }
 
   delay(200);  // sampling interval
 }
 
-void sendToServer(float avgGSR) {
+void sendToServer(float avgVoltage) {
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     http.begin(serverName);
     http.addHeader("Content-Type", "application/json");
 
-    String jsonData = "{\"gsr_value\": " + String(avgGSR, 2) + "}";
+    String jsonData = "{\"gsr_value\": " + String(avgVoltage, 3) + "}"; // send voltage (e.g., 1.223)
     int httpResponseCode = http.POST(jsonData);
 
     if (httpResponseCode > 0) {
-      Serial.println("✅ Sent average GSR to server.");
+      Serial.print("✅ Sent voltage: ");
+      Serial.println(avgVoltage, 3);
     } else {
       Serial.print("❌ Error sending POST: ");
       Serial.println(httpResponseCode);
