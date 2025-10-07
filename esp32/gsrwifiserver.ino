@@ -36,16 +36,8 @@ void loop() {
 
   // --- Read GSR every 200ms ---
   int gsrValue = analogRead(GSR_PIN);
-  float voltage = (gsrValue / 4095.0) * 3.3;
-
   sumGSR += gsrValue;
   sampleCount++;
-
-  Serial.print("GSR Raw: ");
-  Serial.print(gsrValue);
-  Serial.print("\tVoltage: ");
-  Serial.print(voltage, 3);
-  Serial.println(" V");
 
   // --- Every 5 seconds, send average to server ---
   unsigned long currentMillis = millis();
@@ -61,7 +53,7 @@ void loop() {
     }
   }
 
-  delay(200);
+  delay(200);  // sampling interval
 }
 
 void sendToServer(float avgGSR) {
@@ -74,9 +66,7 @@ void sendToServer(float avgGSR) {
     int httpResponseCode = http.POST(jsonData);
 
     if (httpResponseCode > 0) {
-      String response = http.getString();
-      Serial.print("✅ Server Response: ");
-      Serial.println(response);
+      Serial.println("✅ Sent average GSR to server.");
     } else {
       Serial.print("❌ Error sending POST: ");
       Serial.println(httpResponseCode);
