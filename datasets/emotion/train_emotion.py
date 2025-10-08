@@ -1,4 +1,4 @@
-# train.py
+# train_emotion.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -15,9 +15,8 @@ warnings.filterwarnings('ignore')
 print("📂 Loading dataset...")
 df = pd.read_csv("mental_health_wearable_data.csv")
 
-duration_col = 'Duration (minutes)'
-
-required_cols = ['GSR_Values', duration_col, 'Emotional_State']
+# Required columns
+required_cols = ['GSR_Values', 'Emotional_State']
 for col in required_cols:
     if col not in df.columns:
         raise ValueError(f"❌ Column '{col}' not found in dataset.")
@@ -25,20 +24,20 @@ for col in required_cols:
 # ============================================================
 # 2. PREPARE FEATURES AND LABELS
 # ============================================================
-X = df[['GSR_Values', duration_col]].values
+X = df[['GSR_Values']].values  # only GSR
 y = df['Emotional_State'].values
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
 
-# Scale data
+# Scale GSR values
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
 # ============================================================
-# 3. TRAIN BEST MODEL (Logistic Regression)
+# 3. TRAIN MODEL
 # ============================================================
 print("⚙️ Training Logistic Regression model...")
 model = LogisticRegression()
@@ -63,9 +62,9 @@ print(confusion_matrix(y_test, y_pred))
 # 5. SAVE MODEL AND SCALER
 # ============================================================
 print("\n💾 Saving trained model and scaler...")
-joblib.dump(model, "best_model_logreg.pkl")
-joblib.dump(scaler, "scaler.pkl")
+joblib.dump(model, "best_model_emotion.pkl")
+joblib.dump(scaler, "scaler_emotion.pkl")
 
 print("\n✅ Model training complete! Files saved:")
-print(" - best_model_logreg.pkl (trained Logistic Regression model)")
-print(" - scaler.pkl (StandardScaler for preprocessing)")
+print(" - best_model_emotion.pkl")
+print(" - scaler_emotion.pkl")
