@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 # ==============================
 # Load and prepare the dataset
 # ==============================
-def load_heart_rate_data(filepath, sample_size=5000):
+def load_heart_rate_data(filepath, sample_size=42985):
     """
     Load heart rate and emotion data from CSV.
     Keep only neutral, sad, and angry emotions.
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     filepath = "heart_rate_emotion_dataset.csv"
 
     print("Loading dataset...")
-    X, y, label_encoder = load_heart_rate_data(filepath, sample_size=1000)
+    X, y, label_encoder = load_heart_rate_data(filepath, sample_size=42985)
     print(f"Loaded {len(X)} samples for evaluation.")
 
     results, scaler = evaluate_models(X, y)

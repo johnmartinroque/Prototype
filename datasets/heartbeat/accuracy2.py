@@ -1,4 +1,4 @@
-# accuracy.py
+# accuracy.py HAPPY SAD ANGRY NEUTRAL
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -15,7 +15,7 @@ warnings.filterwarnings('ignore')
 # ==============================
 # Load and prepare the dataset
 # ==============================
-def load_heart_rate_data(filepath, sample_size=5000):
+def load_heart_rate_data(filepath, sample_size=57268):
     """
     Load heart rate and emotion data from CSV.
     Keep only happy, sad, angry, and neutral classes.
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     filepath = "heart_rate_emotion_dataset.csv"
 
     print("Loading dataset...")
-    X, y, label_encoder = load_heart_rate_data(filepath, sample_size=1000)
+    X, y, label_encoder = load_heart_rate_data(filepath, sample_size=57268)
     print(f"Loaded {len(X)} samples for evaluation.")
 
     results, scaler = evaluate_models(X, y)
