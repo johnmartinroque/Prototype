@@ -1,4 +1,4 @@
-# accuracy.py SAD, NEUTRAL, ANGRY
+# accuracy.py
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -18,7 +18,7 @@ warnings.filterwarnings('ignore')
 def load_heart_rate_data(filepath, sample_size=5000):
     """
     Load heart rate and emotion data from CSV.
-    Keep only neutral, sad, and angry emotions.
+    Keep only happy, sad, angry, and neutral classes.
     Optionally sample a smaller subset for faster testing.
     """
     df = pd.read_csv(filepath)
@@ -26,13 +26,13 @@ def load_heart_rate_data(filepath, sample_size=5000):
     if 'HeartRate' not in df.columns or 'Emotion' not in df.columns:
         raise ValueError("CSV must contain 'HeartRate' and 'Emotion' columns")
 
-    # ✅ Keep only desired emotions
-    allowed_emotions = ['neutral', 'sad', 'angry']
+    # ✅ Filter only desired emotions
+    allowed_emotions = ['happy', 'sad', 'angry', 'neutral']
     df = df[df['Emotion'].isin(allowed_emotions)].reset_index(drop=True)
 
     print(f"✅ Filtered dataset to {len(df)} rows with emotions: {allowed_emotions}")
 
-    # Sample subset for faster evaluation
+    # Sample only a subset if dataset is large
     if sample_size is not None and len(df) > sample_size:
         print(f"Dataset has {len(df)} rows — sampling {sample_size} for faster evaluation.")
         df = df.sample(n=sample_size, random_state=42).reset_index(drop=True)
@@ -46,7 +46,7 @@ def load_heart_rate_data(filepath, sample_size=5000):
     label_encoder = LabelEncoder()
     y_encoded = label_encoder.fit_transform(y)
 
-    print("Emotion Classes (encoded):", list(label_encoder.classes_))
+    print("Emotion Classes:", list(label_encoder.classes_))
     return X, y_encoded, label_encoder
 
 
