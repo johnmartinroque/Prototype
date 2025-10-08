@@ -18,6 +18,13 @@ warnings.filterwarnings('ignore')
 print("Loading dataset...")
 df = pd.read_csv("mental_health_wearable_data.csv")
 
+# Keep only rows where Emotional_State is Calm or Stressed
+df = df[df['Emotional_State'].isin(['Calm', 'Stressed'])]
+
+# ✅ Check class distribution
+print("Class distribution after filtering:")
+print(df['Emotional_State'].value_counts())
+
 # Check if columns exist
 required_cols = ['GSR_Values', 'Emotional_State']
 for col in required_cols:
