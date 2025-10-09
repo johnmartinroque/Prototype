@@ -10,8 +10,8 @@ CORS(app)  # Enable CORS for React or other frontends
 
 # Load trained emotion model and scaler
 try:
-    model = joblib.load("dataasets/emotion/best_model_emotion.pkl")
-    scaler = joblib.load("datasets/emotion/scaler_emotion.pkl")
+    model = joblib.load("best_model_emotion.pkl")
+    scaler = joblib.load("scaler_emotion.pkl")
     print("✅ Loaded trained emotion model and scaler successfully.")
 except Exception as e:
     print(f"❌ Failed to load model or scaler: {e}")
