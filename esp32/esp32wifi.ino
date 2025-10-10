@@ -2,11 +2,11 @@
 #include <HTTPClient.h>
 
 // ---------- Wi-Fi Setup ----------
-const char* ssid = "HUAWEI-2.4G-eAX8";
-const char* password = "pWfm5Aba";
+const char* ssid = "*";
+const char* password = "*";
 
 // ---------- Server ----------
-const char* serverName = "http://192.168.100.33:5000/data"; // replace with your PC IP
+const char* serverName = "*/data"; // replace with your PC IP
 
 void setup() {
   Serial.begin(115200);

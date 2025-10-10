@@ -4,11 +4,11 @@
 #define GSR_PIN 0  // GPIO0 (ADC pin)
 
 // ---------- Wi-Fi Setup ----------
-const char* ssid = "HUAWEI-2.4G-eAX8";
-const char* password = "pWfm5Aba";
+const char* ssid = "*";
+const char* password = "*";
 
 // ---------- Server ----------
-const char* serverName = "http://192.168.100.33:5000/data"; // Flask server IP
+const char* serverName = "*"; // Flask server IP
 
 unsigned long previousMillis = 0;
 const unsigned long sendInterval = 5000;  // send every 5 seconds

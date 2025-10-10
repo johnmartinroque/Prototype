@@ -11,11 +11,11 @@ const unsigned long SEND_INTERVAL = 5000; // send every 5 seconds
 const int SAMPLE_INTERVAL = 200;          // sample every 200 ms
 
 // ---------- Wi-Fi Setup ----------
-const char* ssid = "HUAWEI-2.4G-eAX8";
-const char* password = "pWfm5Aba";
+const char* ssid = "*";
+const char* password = "*";
 
 // ---------- Server ----------
-const char* serverName = "http://192.168.100.33:5000/data";
+const char* serverName = "*/data";
 
 // ---------- Variables ----------
 unsigned long previousMillis = 0;
