@@ -1,21 +1,44 @@
 import React, { useEffect, useState } from "react";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../firebase";
 
 const Prediction = () => {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [edaAverage, setEdaAverage] = useState(null); // new state for EDA average
   const [error, setError] = useState(null);
 
-  // Fetch latest data
+  const ELDERLY_DOC_ID = "pbMm29stjBct5TxxK0bQ";
+
+  const updateEdaAverage = async (gsrValue) => {
+    try {
+      const docRef = doc(db, "elderly", ELDERLY_DOC_ID);
+      const docSnap = await getDoc(docRef);
+
+      let newAverage = gsrValue;
+
+      if (docSnap.exists() && docSnap.data().edaAverage !== undefined) {
+        const oldAverage = docSnap.data().edaAverage;
+        newAverage = (oldAverage + gsrValue) / 2;
+      }
+
+      await updateDoc(docRef, { edaAverage: newAverage });
+      setEdaAverage(newAverage.toFixed(2)); // show 2 decimal places
+    } catch (err) {
+      console.error("Error updating edaAverage:", err);
+    }
+  };
+
   const fetchLatestData = async () => {
     try {
       const response = await fetch("http://localhost:5000/latest");
       if (!response.ok) throw new Error("No data available yet.");
       const jsonData = await response.json();
       setData(jsonData);
-      setLoading(false);
+
+      // Update Firestore and set EDA average
+      await updateEdaAverage(jsonData.gsr_value);
     } catch (err) {
       setError(err.message);
-      setLoading(false);
     }
   };
 
@@ -25,24 +48,31 @@ const Prediction = () => {
     return () => clearInterval(interval);
   }, []);
 
-  if (loading)
+  if (error)
+    return <p className="text-red-500 text-center mt-10">Error: {error}</p>;
+  if (!data)
     return (
       <p className="text-gray-500 text-center mt-10">
         Loading latest GSR data...
       </p>
     );
-  if (error)
-    return <p className="text-red-500 text-center mt-10">Error: {error}</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold text-center text-blue-600">
-        GSR Prediction
+        GSR Prediction (Realtime)
       </h1>
 
       <div className="bg-white shadow-md rounded-lg p-5 border-l-4 border-blue-500">
         <h2 className="text-xl font-semibold mb-2">GSR Value</h2>
         <p className="text-gray-700 text-lg">{data.gsr_value}</p>
+      </div>
+
+      <div className="bg-white shadow-md rounded-lg p-5 border-l-4 border-purple-500">
+        <h2 className="text-xl font-semibold mb-2">📊 EDA Average Today</h2>
+        <p className="text-gray-700 text-lg">
+          {edaAverage !== null ? edaAverage : "N/A"}
+        </p>
       </div>
 
       <div className="bg-white shadow-md rounded-lg p-5 border-l-4 border-green-500">
