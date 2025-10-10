@@ -1,3 +1,4 @@
+# MWL SERVER
 from flask import Flask, request, jsonify
 from datetime import datetime
 import joblib
@@ -8,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 # Load saved model and scaler
 try:
-    model = joblib.load("datasets/gsr/best_gsr_model.pkl")
+    model = joblib.load("../datasets/gsr/best_gsr_model.pkl")
     print("✅ Loaded trained GSR model successfully.")
 except Exception as e:
     print(f"❌ Failed to load model: {e}")
