@@ -4,7 +4,6 @@ from datetime import datetime
 import joblib
 import numpy as np
 import traceback
-from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -29,8 +28,8 @@ except Exception as e:
 # ---------------- Latest Reading ----------------
 latest_reading = {
     "gsr_value": None,
-    "emotion": {"prediction": None, "confidence": None, "timestamp": None},
-    "mwl": {"prediction": None, "confidence": None, "timestamp": None}
+    "emotion": {"prediction": None, "confidence": None, "all_percentages": None, "timestamp": None},
+    "mwl": {"prediction": None, "confidence": None, "all_percentages": None, "timestamp": None}
 }
 
 # ---------------- Combined Prediction ----------------
@@ -46,7 +45,7 @@ def predict_data():
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         # ---------- Emotion Prediction ----------
-        emotion_result = {"prediction": None, "confidence": None, "timestamp": timestamp}
+        emotion_result = {"prediction": None, "confidence": None, "all_percentages": None, "timestamp": timestamp}
         if emotion_model and emotion_scaler:
             input_data = np.array([[gsr_value]])
             try:
@@ -58,36 +57,43 @@ def predict_data():
 
             pred_val = emotion_model.predict(input_scaled)[0]
             pred_label = str(pred_val)
+            all_percentages = None
             confidence_val = None
             if hasattr(emotion_model, "predict_proba"):
                 proba = emotion_model.predict_proba(input_scaled)[0]
+                all_percentages = {str(cls): round(p*100, 1) for cls, p in zip(emotion_model.classes_, proba)}
                 try:
                     class_index = list(emotion_model.classes_).index(pred_val)
                     confidence_val = proba[class_index] * 100
                 except:
                     confidence_val = np.max(proba) * 100
 
-            # ✅ Round confidence to 1 decimal place
             emotion_result.update({
                 "prediction": pred_label,
-                "confidence": round(confidence_val, 1) if confidence_val is not None else None
+                "confidence": round(confidence_val, 1) if confidence_val is not None else None,
+                "all_percentages": all_percentages
             })
 
         # ---------- MWL Prediction ----------
-        mwl_result = {"prediction": None, "confidence": None, "timestamp": timestamp}
+        mwl_result = {"prediction": None, "confidence": None, "all_percentages": None, "timestamp": timestamp}
         if mwl_model:
             input_data = np.array([[gsr_value]*mwl_model.n_features_in_])
             pred_val = mwl_model.predict(input_data)[0]
             pred_label = "High MWL" if pred_val == 1 else "Low MWL"
+            all_percentages = None
             confidence_val = None
             if hasattr(mwl_model, "predict_proba"):
                 proba = mwl_model.predict_proba(input_data)[0]
-                confidence_val = proba[pred_val] * 100
+                all_percentages = {
+                    "Low MWL": round(proba[0]*100, 1),
+                    "High MWL": round(proba[1]*100, 1)
+                }
+                confidence_val = all_percentages[pred_label]
 
-            # ✅ Round confidence to 1 decimal place
             mwl_result.update({
                 "prediction": pred_label,
-                "confidence": round(confidence_val, 1) if confidence_val is not None else None
+                "confidence": confidence_val,
+                "all_percentages": all_percentages
             })
 
         # ---------- Save Latest ----------
@@ -98,7 +104,11 @@ def predict_data():
         }
 
         # ---------- Log ----------
-        print(f"[{timestamp}] 📡 GSR: {gsr_value:.3f} → 🧠 Emotion: {emotion_result['prediction']} ({emotion_result['confidence']}%), MWL: {mwl_result['prediction']} ({mwl_result['confidence']}%)")
+        print(f"[{timestamp}] 📡 GSR: {gsr_value:.3f}")
+        if emotion_result["all_percentages"]:
+            print("🧠 Emotion Probabilities: " + ", ".join([f"{k}: {v}%" for k, v in emotion_result["all_percentages"].items()]))
+        if mwl_result["all_percentages"]:
+            print("💼 MWL Probabilities: " + ", ".join([f"{k}: {v}%" for k, v in mwl_result["all_percentages"].items()]))
 
         return jsonify(latest_reading), 200
 
@@ -109,30 +119,9 @@ def predict_data():
 # ---------------- Latest Endpoint ----------------
 @app.route('/latest', methods=['GET'])
 def get_latest():
-    global last_received_time
-
     if latest_reading["gsr_value"] is None:
-        return jsonify({
-            "status": "no_data",
-            "message": "No data received yet"
-        }), 404
-
-    if last_received_time is None:
-        return jsonify(latest_reading), 200
-
-    # ⏱️ Check timeout
-    time_diff = datetime.now() - last_received_time
-    if time_diff > timedelta(seconds=DATA_TIMEOUT_SECONDS):
-        return jsonify({
-            **latest_reading,
-            "status": "stopped",
-            "stopped_at": last_received_time.strftime("%Y-%m-%d %H:%M:%S")
-        }), 200
-
-    return jsonify({
-        **latest_reading,
-        "status": "active"
-    }), 200
+        return jsonify({"status": "error", "message": "No data yet"}), 404
+    return jsonify(latest_reading), 200
 
 # ---------------- Run Server ----------------
 if __name__ == '__main__':
