@@ -4,6 +4,7 @@ from datetime import datetime
 import joblib
 import numpy as np
 import traceback
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)
@@ -108,9 +109,30 @@ def predict_data():
 # ---------------- Latest Endpoint ----------------
 @app.route('/latest', methods=['GET'])
 def get_latest():
+    global last_received_time
+
     if latest_reading["gsr_value"] is None:
-        return jsonify({"status": "error", "message": "No data yet"}), 404
-    return jsonify(latest_reading), 200
+        return jsonify({
+            "status": "no_data",
+            "message": "No data received yet"
+        }), 404
+
+    if last_received_time is None:
+        return jsonify(latest_reading), 200
+
+    # ⏱️ Check timeout
+    time_diff = datetime.now() - last_received_time
+    if time_diff > timedelta(seconds=DATA_TIMEOUT_SECONDS):
+        return jsonify({
+            **latest_reading,
+            "status": "stopped",
+            "stopped_at": last_received_time.strftime("%Y-%m-%d %H:%M:%S")
+        }), 200
+
+    return jsonify({
+        **latest_reading,
+        "status": "active"
+    }), 200
 
 # ---------------- Run Server ----------------
 if __name__ == '__main__':
