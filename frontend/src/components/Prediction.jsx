@@ -4,7 +4,7 @@ import { db } from "../firebase";
 
 const Prediction = () => {
   const [data, setData] = useState(null);
-  const [edaAverage, setEdaAverage] = useState(null); // new state for EDA average
+  const [edaAverage, setEdaAverage] = useState(null);
   const [error, setError] = useState(null);
 
   const ELDERLY_DOC_ID = "pbMm29stjBct5TxxK0bQ";
@@ -22,7 +22,7 @@ const Prediction = () => {
       }
 
       await updateDoc(docRef, { edaAverage: newAverage });
-      setEdaAverage(newAverage.toFixed(2)); // show 2 decimal places
+      setEdaAverage(newAverage.toFixed(2));
     } catch (err) {
       console.error("Error updating edaAverage:", err);
     }
@@ -35,7 +35,6 @@ const Prediction = () => {
       const jsonData = await response.json();
       setData(jsonData);
 
-      // Update Firestore and set EDA average
       await updateEdaAverage(jsonData.gsr_value);
     } catch (err) {
       setError(err.message);
@@ -65,12 +64,12 @@ const Prediction = () => {
 
       <div className="bg-white shadow-md rounded-lg p-5 border-l-4 border-blue-500">
         <h2 className="text-xl font-semibold mb-2">GSR Value</h2>
-        <p className="text-gray-700 text-lg">{data.gsr_value}</p>
+        <p className="text-gray-700">{data.gsr_value}</p>
       </div>
 
       <div className="bg-white shadow-md rounded-lg p-5 border-l-4 border-purple-500">
         <h2 className="text-xl font-semibold mb-2">📊 EDA Average Today</h2>
-        <p className="text-gray-700 text-lg">
+        <p className="text-gray-700">
           {edaAverage !== null ? edaAverage : "N/A"}
         </p>
       </div>
@@ -86,7 +85,21 @@ const Prediction = () => {
             ? `${data.emotion.confidence}%`
             : "N/A"}
         </p>
-        <p className="text-gray-500 text-sm">
+        {data.emotion.all_percentages && (
+          <div className="text-gray-700 mt-2">
+            <strong>All Probabilities:</strong>
+            <ul className="list-disc list-inside">
+              {Object.entries(data.emotion.all_percentages).map(
+                ([key, val]) => (
+                  <li key={key}>
+                    {key}: {val}%
+                  </li>
+                ),
+              )}
+            </ul>
+          </div>
+        )}
+        <p className="text-gray-500 text-sm mt-1">
           <strong>Timestamp:</strong> {data.emotion.timestamp}
         </p>
       </div>
@@ -100,7 +113,19 @@ const Prediction = () => {
           <strong>Confidence:</strong>{" "}
           {data.mwl.confidence !== null ? `${data.mwl.confidence}%` : "N/A"}
         </p>
-        <p className="text-gray-500 text-sm">
+        {data.mwl.all_percentages && (
+          <div className="text-gray-700 mt-2">
+            <strong>All Probabilities:</strong>
+            <ul className="list-disc list-inside">
+              {Object.entries(data.mwl.all_percentages).map(([key, val]) => (
+                <li key={key}>
+                  {key}: {val}%
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <p className="text-gray-500 text-sm mt-1">
           <strong>Timestamp:</strong> {data.mwl.timestamp}
         </p>
       </div>
