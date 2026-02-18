@@ -1,0 +1,36 @@
+/* App.css */
+
+/* Ensure the app takes the full height and width of the viewport */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5; /* optional background color */
+}
+
+/* Container for your app */
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* full height of screen */
+}
+
+/* Loading screen styling */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+/* Example: Make Routes container fill remaining space */
+.main-content {
+  flex: 1;
+  padding: 20px;
+}

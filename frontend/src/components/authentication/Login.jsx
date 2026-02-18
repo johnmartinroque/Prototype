@@ -27,7 +27,7 @@ function Login({ handleShowLoginForm }) {
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
       localStorage.setItem("userInfo", JSON.stringify(userCredential.user));
       setEmail("");

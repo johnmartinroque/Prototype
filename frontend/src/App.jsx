@@ -15,6 +15,8 @@ import Camera from "./screens/CameraFeed.jsx";
 import CameraFeed from "./screens/CameraFeed.jsx";
 import Profile from "./screens/Profile.jsx";
 import Report from "./screens/Report.jsx";
+import "./App.css";
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -9,6 +9,8 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
+from scipy.signal import find_peaks, savgol_filter
+from scipy.fft import fft
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -71,43 +73,69 @@ def load_and_prepare_data(high_path, low_path):
 
 def extract_gsr_features(df):
     """
-    Extract meaningful features from GSR data
-    GSR data typically has multiple columns (different trials/channels)
+    Extract advanced GSR features:
+    - Statistical: mean, std, min, max, median, percentiles, range
+    - Temporal: differences, slopes, RMS
+    - Frequency: FFT magnitudes
+    - Peak-related: number of SCR peaks, mean/max peak amplitude
+    - Cross-column: correlations, mean differences
     """
     features = []
     
     # Process each column separately
     for col in df.columns:
-        column_data = df[col].dropna()
+        column_data = df[col].dropna().values
         
-        if len(column_data) > 0:
-            # Basic statistical features
-            col_features = [
-                np.mean(column_data),      # Mean GSR
-                np.std(column_data),       # Standard deviation
-                np.min(column_data),       # Minimum value
-                np.max(column_data),       # Maximum value
-                np.median(column_data),    # Median
-                np.percentile(column_data, 25),  # 25th percentile
-                np.percentile(column_data, 75),  # 75th percentile
-                np.ptp(column_data),       # Peak-to-peak (range)
-            ]
-            
-            # Additional GSR-specific features
-            if len(column_data) > 1:
-                # Rate of change features
-                differences = np.diff(column_data)
-                col_features.extend([
-                    np.mean(np.abs(differences)),  # Mean absolute difference
-                    np.std(differences),           # Std of differences
-                    np.max(np.abs(differences)),   # Maximum absolute difference
-                ])
-            else:
-                col_features.extend([0, 0, 0])  # Pad with zeros if not enough data
-            
-            features.extend(col_features)
+        if len(column_data) == 0:
+            # Pad if empty
+            features.extend([0]*20)
+            continue
+        
+        # --- Smooth signal to reduce noise ---
+        if len(column_data) >= 5:
+            column_data = savgol_filter(column_data, window_length=5, polyorder=2)
+        
+        # --- Basic statistics ---
+        col_features = [
+            np.mean(column_data),
+            np.std(column_data),
+            np.min(column_data),
+            np.max(column_data),
+            np.median(column_data),
+            np.percentile(column_data, 25),
+            np.percentile(column_data, 75),
+            np.ptp(column_data),  # range
+        ]
+        
+        # --- Temporal features ---
+        diffs = np.diff(column_data)
+        col_features.extend([
+            np.mean(np.abs(diffs)),
+            np.std(diffs),
+            np.max(np.abs(diffs)),
+            np.sqrt(np.mean(column_data**2)),  # RMS
+        ])
+        
+        # --- Peak features (SCR) ---
+        peaks, properties = find_peaks(column_data, height=np.mean(column_data))
+        peak_heights = properties['peak_heights'] if 'peak_heights' in properties else []
+        col_features.extend([
+            len(peaks),  # number of peaks
+            np.mean(peak_heights) if len(peak_heights) > 0 else 0,
+            np.max(peak_heights) if len(peak_heights) > 0 else 0
+        ])
+        
+        # --- Frequency domain features ---
+        fft_vals = np.abs(fft(column_data))[:len(column_data)//2]  # take half
+        # Take mean and max of FFT magnitudes
+        col_features.extend([
+            np.mean(fft_vals),
+            np.max(fft_vals)
+        ])
+        
+        features.extend(col_features)
     
-    # If we have multiple columns, also add cross-column features
+    # --- Cross-column features ---
     if df.shape[1] > 1:
         # Correlation between columns
         try:
@@ -119,10 +147,10 @@ def extract_gsr_features(df):
         # Mean differences between columns
         column_means = df.mean()
         if len(column_means) > 1:
-            mean_differences = [column_means[i] - column_means[j] 
-                              for i in range(len(column_means)) 
-                              for j in range(i+1, len(column_means))]
-            features.extend(mean_differences)
+            mean_diffs = [column_means[i] - column_means[j] 
+                          for i in range(len(column_means)) 
+                          for j in range(i+1, len(column_means))]
+            features.extend(mean_diffs)
     
     return features
 

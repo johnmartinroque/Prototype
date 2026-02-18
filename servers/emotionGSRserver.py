@@ -100,4 +100,4 @@ def get_latest():
 # ---------------- Run Server ----------------
 if __name__ == '__main__':
     print("🚀 Emotion Flask server running... waiting for ESP32 data.")
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5001)
